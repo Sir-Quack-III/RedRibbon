@@ -4,10 +4,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"os"
 
-	"github.com/marcusolsson/tui-go"
+	. "github.com/gbin/goncurses"
 )
 
 type ChatMsg struct {
@@ -40,18 +41,29 @@ func httpGet(url string) string {
 }
 
 func main() {
-	sidebar := tui.NewVBox(
-		tui.NewLabel("Congregations:"),
-		tui.NewLabel("Private Assemblies:"),
-	)
+	// Curses init
+	stdscr, err := Init()
+	Raw(true)
 
-	ui, err := tui.New(sidebar)
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
-	ui.SetKeybinding("Esc", func() { ui.Quit() })
 
-	if err := ui.Run(); err != nil {
-		panic(err)
-	}
+	// <CODE>
+	jsonreceived := httpGet("https://redribbonservers.jort57.repl.co/jsontest")
+	stdscr.Println("Fetching JSON data...")
+	stdscr.Printf("JSON received from redribbon servers: %s\n", jsonreceived)
+	stdscr.Printf("Decoding JSON...\n")
+	jsonDecoded := DecodeMsg(jsonreceived)
+	stdscr.Printf("Username: %s\n", jsonDecoded.Username)
+	stdscr.Printf("Channel: %s\n", jsonDecoded.Channel)
+	stdscr.Printf("Message: %s\n", jsonDecoded.sg)
+
+	// </CODE>
+
+	// Wait for key to be pressed to end
+	stdscr.Refresh()
+	stdscr.GetChar()
+
+	End()
 }
